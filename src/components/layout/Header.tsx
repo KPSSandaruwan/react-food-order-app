@@ -3,7 +3,7 @@ import mealImg from "../../assets/img/meals.jpg";
 import classes from "./Header.module.css";
 import HeaderCartButton from "./HeaderCartButton";
 
-const Header = () => {
+const Header: React.FC = () => {
   return (
     <React.Fragment>
       <header className={classes.header}>
