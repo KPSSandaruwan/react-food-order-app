@@ -1,41 +1,52 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { MealsService } from "../../services/MealsService";
 import Card from "../common/Card";
 import classes from "./AvailableMeals.module.css";
 import MealItem from "./MealItem";
 
-export const DUMMY_MEALS = [
-  {
-    id: "m1",
-    name: "Sushi",
-    description: "Finest fish and veggies",
-    price: 22.99,
-  },
-  {
-    id: "m2",
-    name: "Schnitzel",
-    description: "A german specialty!",
-    price: 16.5,
-  },
-  {
-    id: "m3",
-    name: "Barbecue Burger",
-    description: "American, raw, meaty",
-    price: 12.99,
-  },
-  {
-    id: "m4",
-    name: "Green Bowl",
-    description: "Healthy...and green...",
-    price: 18.99,
-  },
-];
-
 const AvailableMeals: React.FC = () => {
+  const [meals, setMeals] = useState([] as any);
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+
+  useEffect(() => {
+    MealsService.getAllAvailableMeals().then((res) => {
+      console.log(res);
+
+      if(res.statusText === "OK") {
+        const responseData = res.data;
+        const loadedMeals = [];
+
+      for (const key in responseData) {
+        loadedMeals.push({
+          id: key,
+          name: responseData[key].name,
+          description: responseData[key].description,
+          price: responseData[key].price,
+        });
+      }
+      setMeals(loadedMeals);
+      setIsLoading(false);
+      } else {
+        setIsLoading(false);
+        return <section className={classes.mealsError}>
+          <p>Something went wrong!</p>
+        </section>
+      }
+      
+    });
+  }, []);
+
+  if (isLoading) {
+    return <section className={classes.mealsLoading}>
+      <p>Loading...</p>
+    </section>
+  }
+
   return (
     <section className={classes.meals}>
       <Card>
         <ul>
-          {DUMMY_MEALS.map((meal: any) => (
+          {meals.map((meal: any) => (
             <MealItem
               id={meal.id}
               key={meal.id}
