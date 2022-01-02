@@ -1,37 +1,109 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import classes from "./Checkout.module.css";
 
-const Checkout: React.FC<{ onCancel: () => void }> = (props) => {
+const isEmpty = (value: string | undefined) => value!.trim().length === 0;
+const isNotFiveChars = (value: string | undefined) =>
+  value!.trim().length !== 5;
+
+const Checkout: React.FC<{ onCancel: () => void; onConfirm: (data: any) => void }> = (
+  props
+) => {
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const streetInputRef = useRef<HTMLInputElement>(null);
+  const postalCodeInputRef = useRef<HTMLInputElement>(null);
+  const cityInputRef = useRef<HTMLInputElement>(null);
+
+  const [formInputValidity, setFormInputValidity] = useState({
+    name: true,
+    street: true,
+    city: true,
+    postalCode: true,
+  });
+
   const confirmHandler = (event: React.FormEvent) => {
     event.preventDefault();
+
+    const enteredName = nameInputRef.current?.value;
+    const enteredStreet = streetInputRef.current?.value;
+    const enteredPostalCode = postalCodeInputRef.current?.value;
+    const enteredCity = cityInputRef.current?.value;
+
+    const enteredNameIsValid = !isEmpty(enteredName);
+    const enteredStreetIsValid = !isEmpty(enteredStreet);
+    const enteredPostalCodeIsValid = !isNotFiveChars(enteredPostalCode);
+    const enteredCityIsValid = !isEmpty(enteredCity);
+
+    setFormInputValidity({
+      name: enteredNameIsValid,
+      street: enteredStreetIsValid,
+      city: enteredCityIsValid,
+      postalCode: enteredPostalCodeIsValid,
+    });
+
+    const formIsValid =
+      enteredNameIsValid &&
+      enteredCityIsValid &&
+      enteredPostalCodeIsValid &&
+      enteredStreetIsValid;
+
+    if (!formIsValid) {
+      return;
+    }
+
+    props.onConfirm({
+      name: enteredName,
+      street: enteredStreet,
+      city: enteredCity,
+      postalCode: enteredPostalCode,
+    });
   };
 
   return (
-    <form>
-      <div className={classes.control}>
+    <form className={classes.form} onSubmit={confirmHandler}>
+      <div
+        className={`${classes.control} ${
+          formInputValidity.name ? "" : classes.invalid
+        }`}
+      >
         <label htmlFor="name">Your Name</label>
-        <input type="text" id="name" />
+        <input type="text" id="name" ref={nameInputRef} />
+        {!formInputValidity.name && <p>Please Enter Valid Name!</p>}
       </div>
-
-      <div className={classes.control}>
+      <div
+        className={`${classes.control} ${
+          formInputValidity.street ? "" : classes.invalid
+        }`}
+      >
         <label htmlFor="street">Street</label>
-        <input type="text" id="street" />
+        <input type="text" id="street" ref={streetInputRef} />
+        {!formInputValidity.street && <p>Please Enter Valid Street!</p>}
       </div>
-
-      <div className={classes.control}>
+      <div
+        className={`${classes.control} ${
+          formInputValidity.postalCode ? "" : classes.invalid
+        }`}
+      >
         <label htmlFor="postal">Postal Code</label>
-        <input type="text" id="postal" />
+        <input type="text" id="postal" ref={postalCodeInputRef} />
+        {!formInputValidity.postalCode && (
+          <p>Please Enter Valid Postal Code!</p>
+        )}
       </div>
-
-      <div className={classes.control}>
+      <div
+        className={`${classes.control} ${
+          formInputValidity.city ? "" : classes.invalid
+        }`}
+      >
         <label htmlFor="city">City</label>
-        <input type="text" id="city" />
+        <input type="text" id="city" ref={cityInputRef} />
+        {!formInputValidity.city && <p>Please Enter Valid City!</p>}
       </div>
-
-      <button type="button" onClick={props.onCancel}>
-        Cancel
-      </button>
-      <button type="submit">Confirm</button>
+      <div className={classes.actions}>
+        <button type="button" onClick={props.onCancel}>
+          Cancel
+        </button>
+        <button className={classes.submit}>Confirm</button>
+      </div>
     </form>
   );
 };

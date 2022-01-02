@@ -1,5 +1,6 @@
 import React, { useContext, useState } from "react";
 import CartContext from "../../context/cart-context";
+import { MealsService } from "../../services/MealsService";
 import Modal from "../common/Modal";
 import classes from "./Cart.module.css";
 import CartItem from "./CartItem";
@@ -7,6 +8,8 @@ import Checkout from "./Checkout";
 
 const Cart: React.FC<{ onClose: () => void }> = (props) => {
   const [isCheckout, setIsCheckout] = useState<boolean>(false);
+  const [isSubmit, setIsSubmit] = useState<boolean>(false);
+  const [didSubmit, setDidSubmit] = useState<boolean>(false);
   const cartCtx = useContext(CartContext);
 
   const totalAmount = `$${cartCtx.totalAmount.toFixed(2)}`;
@@ -39,14 +42,35 @@ const Cart: React.FC<{ onClose: () => void }> = (props) => {
     setIsCheckout(true);
   };
 
-  return (
-    <Modal onClose={props.onClose}>
+  const submitHandler = (userData: any) => {
+    setIsSubmit(true);
+    MealsService.submitCheckoutForm({
+      user: userData,
+      orderedItems: cartCtx.items,
+    }).then((res) => {
+      console.log(res);
+
+      if (res.statusText === "OK") {
+        setIsSubmit(false);
+        setDidSubmit(true);
+        cartCtx.clearCart();
+      } else {
+        setIsSubmit(false);
+        return;
+      }
+    });
+  };
+
+  const cartModelContent = (
+    <React.Fragment>
       {cartItems}
       <div className={classes.total}>
         <span>Total Amount</span>
         <span>{totalAmount}</span>
       </div>
-      {isCheckout && <Checkout onCancel={props.onClose} />}
+      {isCheckout && (
+        <Checkout onCancel={props.onClose} onConfirm={submitHandler} />
+      )}
 
       {!isCheckout && (
         <div className={classes.actions}>
@@ -60,6 +84,17 @@ const Cart: React.FC<{ onClose: () => void }> = (props) => {
           )}
         </div>
       )}
+    </React.Fragment>
+  );
+
+  const isSubmittingContent = <p>Sending order data...</p>;
+  const didSubmittedContent = <p>Successfully sent the order!</p>;
+
+  return (
+    <Modal onClose={props.onClose}>
+      {!isSubmit && !didSubmit && cartModelContent}
+      {isSubmit && isSubmittingContent}
+      {!isSubmit && didSubmit && didSubmittedContent}
     </Modal>
   );
 };
